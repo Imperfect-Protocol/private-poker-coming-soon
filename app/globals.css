@@ -104,6 +104,7 @@ select {
 .splash h1,
 .welcome h1,
 .intro h2,
+.difference h2,
 .section-heading h2,
 .roadmap h2 {
   margin: 0;
@@ -201,6 +202,7 @@ select {
 }
 
 .intro h2,
+.difference h2,
 .section-heading h2,
 .roadmap h2 {
   max-width: 800px;
@@ -217,6 +219,52 @@ select {
   color: var(--muted);
   font-size: 1.04rem;
   line-height: 1.75;
+}
+
+.story-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 14px;
+  padding: 16px 0 34px;
+}
+
+.story-card {
+  min-height: 248px;
+  padding: 24px;
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-end;
+  border: 1px solid rgba(255, 75, 104, 0.22);
+  border-radius: 8px;
+  background:
+    linear-gradient(180deg, rgba(255, 56, 92, 0.08), rgba(15, 5, 8, 0.92)),
+    #16090b;
+}
+
+.story-card p {
+  margin: 0 0 14px;
+  color: var(--red-hot);
+  font-family: ui-monospace, SFMono-Regular, Consolas, "Liberation Mono", monospace;
+  font-size: 0.72rem;
+  font-weight: 950;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+}
+
+.story-card h3 {
+  margin: 0;
+  color: #fff7f8;
+  font-size: clamp(1.35rem, 2.4vw, 1.95rem);
+  font-weight: 950;
+  line-height: 0.98;
+  text-transform: uppercase;
+}
+
+.story-card span {
+  margin-top: 16px;
+  color: var(--muted);
+  font-size: 0.96rem;
+  line-height: 1.55;
 }
 
 .mock-table {
@@ -677,6 +725,45 @@ select {
   padding: 76px 0 46px;
 }
 
+.difference {
+  display: grid;
+  grid-template-columns: minmax(0, 0.78fr) minmax(320px, 0.86fr);
+  gap: 40px;
+  align-items: start;
+  padding: 42px 0 24px;
+  border-top: 1px solid var(--line);
+}
+
+.difference__rows {
+  display: grid;
+  gap: 10px;
+}
+
+.difference__rows article {
+  min-height: 92px;
+  padding: 18px 20px;
+  border: 1px solid rgba(255, 75, 104, 0.18);
+  border-radius: 8px;
+  background: rgba(255, 255, 255, 0.045);
+}
+
+.difference__rows strong,
+.difference__rows span {
+  display: block;
+}
+
+.difference__rows strong {
+  margin-bottom: 7px;
+  color: #fff7f8;
+  font-weight: 950;
+  text-transform: uppercase;
+}
+
+.difference__rows span {
+  color: #f3cbd2;
+  line-height: 1.5;
+}
+
 .section-heading {
   display: grid;
   grid-template-columns: minmax(0, 0.92fr) minmax(260px, 0.58fr);
@@ -1068,6 +1155,8 @@ select {
   }
 
   .section-heading,
+  .story-grid,
+  .difference,
   .principles,
   .roadmap {
     grid-template-columns: 1fr;
@@ -1163,6 +1252,11 @@ select {
   }
 
   .principle {
+    padding: 22px;
+  }
+
+  .story-card {
+    min-height: 220px;
     padding: 22px;
   }
 

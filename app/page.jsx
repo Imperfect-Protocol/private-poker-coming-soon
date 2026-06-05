@@ -23,11 +23,38 @@ const principles = [
   }
 ];
 
+const storyBlocks = [
+  {
+    label: "1979 problem",
+    title: "Mental Poker, made practical.",
+    copy:
+      "The original challenge was simple to state and hard to build: can people play a fair card game remotely without trusting a dealer? Private Poker turns that question into a modern product surface."
+  },
+  {
+    label: "Competitive format",
+    title: "Structured play over open-ended wagering.",
+    copy:
+      "The experience is framed around committed tables, fixed rules, and bounded participation, so the focus stays on skill, strategy, and transparent outcomes."
+  },
+  {
+    label: "Zero-trust engine",
+    title: "Fairness that does not ask for belief.",
+    copy:
+      "Cards, actions, and outcomes are designed to be checked through cryptography and settlement logic rather than hidden server authority."
+  }
+];
+
+const differenceItems = [
+  ["Traditional online poker", "A central house shuffles, hosts, tracks balances, and asks players to trust the server."],
+  ["Private Poker", "Players coordinate directly, the deck is protected cryptographically, and contracts act as referee and vault."],
+  ["Why it matters", "The table becomes inspectable: no hidden dealer, no opaque game logic, and no server with privileged card knowledge."]
+];
+
 const roadmapItems = [
   ["First game", "Heads-up and tabled Texas Hold'em before Omaha and draw variants."],
   ["P2P network", "Players exchange signed state directly instead of asking a house server."],
   ["Verifiable hands", "BLS masking makes the deck private while still leaving an audit trail."],
-  ["Settlement rails", "Chips, lobbies, tournaments, and results settle through contracts later."]
+  ["Competition rails", "Lobbies, tables, tournaments, leaderboards, and achievement proofs grow from the same protocol base."]
 ];
 
 export default function Home() {
@@ -95,15 +122,41 @@ function WelcomeScreen() {
           </p>
         </section>
 
+        <section className="story-grid" aria-label="Private Poker product story">
+          {storyBlocks.map((item) => (
+            <article className="story-card" key={item.title}>
+              <p>{item.label}</p>
+              <h3>{item.title}</h3>
+              <span>{item.copy}</span>
+            </article>
+          ))}
+        </section>
+
         <section className="table-section" aria-label="Mock Private Poker table">
           <div className="section-heading">
             <p className="section-label">Experience Poker like never before</p>
             <h2>Peer To Peer Poker Experience.</h2>
             <span>
-              This is fully decentralised peer-to-peer serverless poker game.
+              A fully decentralized, serverless table where players coordinate
+              directly and the house is replaced by verifiable protocol logic.
             </span>
           </div>
           <PokerTableMockup />
+        </section>
+
+        <section className="difference">
+          <div>
+            <p className="section-label">How it is different</p>
+            <h2>The house becomes a protocol.</h2>
+          </div>
+          <div className="difference__rows">
+            {differenceItems.map(([title, copy]) => (
+              <article key={title}>
+                <strong>{title}</strong>
+                <span>{copy}</span>
+              </article>
+            ))}
+          </div>
         </section>
 
         <section className="principles" aria-label="Private Poker principles">
