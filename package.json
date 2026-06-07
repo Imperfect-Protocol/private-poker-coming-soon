@@ -3,9 +3,10 @@
   "version": "0.1.0",
   "private": true,
   "scripts": {
-    "dev": "node server.mjs",
+    "dev": "npm run bundle && node .next-bundle/server.mjs",
     "build": "next build",
-    "start": "NODE_ENV=production node server.mjs",
+    "bundle": "npx next-bundle",
+    "start": "node .next-bundle/server.mjs",
     "lint": "next lint"
   },
   "dependencies": {
@@ -13,5 +14,7 @@
     "react": "19.2.3",
     "react-dom": "19.2.3"
   },
-  "devDependencies": {}
+  "devDependencies": {
+    "next-bundle": "file:tools/next-bundle"
+  }
 }
