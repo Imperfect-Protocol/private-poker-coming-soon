@@ -57,8 +57,9 @@ function bootstrapUrl(req) {
 }
 
 function sendFrame(socket, value) {
-  if (socket.readyState !== WebSocket.OPEN) return;
+  if (socket.readyState !== WebSocket.OPEN) return false;
   socket.send(JSON.stringify(value));
+  return true;
 }
 
 function parseBase64UrlJson(value) {
@@ -264,29 +265,62 @@ function markActivity(entry, reason) {
   });
 }
 
-function scanInterests(reason) {
-  logAction("scan.start", { reason });
+function executeInterest(interest, reason) {
+  if (!interest || interest.state !== "Open") return false;
 
-  for (const interest of interests.values()) {
-    if (interest.state !== "Open") continue;
-
-    const fromSocket = sockets.get(peerSocketKey(interest.offer.lobbyId, interest.offer.tableId, interest.offer.from));
-    const toSocket = sockets.get(peerSocketKey(interest.offer.lobbyId, interest.offer.tableId, interest.offer.to));
-    if (!socketUsable(fromSocket) || !socketUsable(toSocket)) continue;
-
-    sendFrame(toSocket.socket, {
-      type: "bootstrap-offer",
-      interestId: interest.key,
-      peer: interest.offer.from,
-      signal: envelope(interest.offer, interest.offer.to),
+  const fromSocket = sockets.get(peerSocketKey(interest.offer.lobbyId, interest.offer.tableId, interest.offer.from));
+  const toSocket = sockets.get(peerSocketKey(interest.offer.lobbyId, interest.offer.tableId, interest.offer.to));
+  if (!socketUsable(fromSocket) || !socketUsable(toSocket)) {
+    logAction("offer.wait", {
+      reason,
+      interest: interestLog(interest),
+      hasFromSocket: socketUsable(fromSocket),
+      hasToSocket: socketUsable(toSocket),
     });
-    interest.state = "Offered";
-    interest.offeredAt = Date.now();
-    markActivity(fromSocket, "offer.sent.from");
-    markActivity(toSocket, "offer.sent.to");
-    logAction("offer.forward", { interest: interestLog(interest) });
+    return false;
   }
 
+  const sent = sendFrame(toSocket.socket, {
+    type: "bootstrap-offer",
+    interestId: interest.key,
+    peer: interest.offer.from,
+    signal: envelope(interest.offer, interest.offer.to),
+  });
+  if (!sent) {
+    logAction("offer.send-failed", { reason, interest: interestLog(interest) });
+    return false;
+  }
+
+  interest.state = "Offered";
+  interest.offeredAt = Date.now();
+  markActivity(fromSocket, "offer.sent.from");
+  markActivity(toSocket, "offer.sent.to");
+  logAction("offer.forward", { reason, interest: interestLog(interest) });
+  return true;
+}
+
+function scanPeerInterests(peer, reason) {
+  const keys = [...(peerInterests.get(peer) ?? [])];
+  logAction("scan.peer", {
+    reason,
+    peer: shortPeerKey(peer),
+    keys,
+  });
+
+  for (const key of keys) {
+    executeInterest(interests.get(key), reason);
+  }
+}
+
+function scanInterestSender(interest, reason) {
+  if (!interest) return;
+  const peer = vertexKey(interest.offer.lobbyId, interest.offer.tableId, interest.offer.from);
+
+  logAction("scan.start", {
+    reason,
+    peer: shortPeerKey(peer),
+  });
+  scanPeerInterests(peer, reason);
 }
 
 function storeInterest(signal) {
@@ -305,7 +339,7 @@ function storeInterest(signal) {
   interests.set(key, interest);
   addMappedInterest(interest);
   logAction(existing ? "interest.replace" : "interest.store", { interest: interestLog(interest) });
-  scanInterests("interest");
+  scanInterestSender(interest, "interest");
 }
 
 function storeAnswer(signal) {
@@ -316,7 +350,11 @@ function storeAnswer(signal) {
     return;
   }
 
-  const targetSocket = sockets.get(peerSocketKey(signal.lobbyId, signal.tableId, signal.to));
+  const targetSocket = sockets.get(peerSocketKey(
+    interest.offer.lobbyId,
+    interest.offer.tableId,
+    interest.offer.from,
+  ));
   if (!socketUsable(targetSocket)) {
     logAction("answer.no-target-socket", { answer: signalLog(signal), key });
     return;
@@ -329,14 +367,14 @@ function storeAnswer(signal) {
     type: "bootstrap-answer",
     interestId: interest.key,
     peer: signal.from,
-    signal: envelope(signal, signal.to),
+    signal: envelope(signal, interest.offer.from),
   });
 
   const sourceSocket = sockets.get(peerSocketKey(signal.lobbyId, signal.tableId, signal.from));
   markActivity(sourceSocket, "answer.sent.from");
   markActivity(targetSocket, "answer.sent.to");
   logAction("answer.forward", { interest: interestLog(interest) });
-  scanInterests("answer");
+  scanInterestSender(interest, "answer");
 }
 
 function registerSocket(socket, signal) {
