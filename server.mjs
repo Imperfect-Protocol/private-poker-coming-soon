@@ -7,13 +7,12 @@ import next from "next";
 const dev = process.env.NODE_ENV !== "production";
 const hostname = process.env.HOST ?? "127.0.0.1";
 const port = Number(process.env.PORT ?? 3000);
-const holdTimeoutMs = Number(process.env.PRIVATE_MESH_BOOTSTRAP_TIMEOUT_MS ?? 10_000);
-const collectDelayMs = Number(process.env.PRIVATE_MESH_COLLECT_DELAY_MS ?? 5_000);
 const maxFrameBytes = Number(process.env.PRIVATE_MESH_MAX_FRAME_BYTES ?? 1024 * 1024);
+const peerHeartbeatMs = Number(process.env.PRIVATE_MESH_PEER_HEARTBEAT_MS ?? 10_000);
 
 const sockets = new Map();
 const interests = new Map();
-const adjacency = new Map();
+const peerInterests = new Map();
 
 const app = next({ dev, hostname, port });
 const handle = app.getRequestHandler();
@@ -43,7 +42,7 @@ function logAction(action, fields = {}) {
   console.log("[resu]", action, {
     sockets: sockets.size,
     interests: interests.size,
-    vertices: adjacency.size,
+    map: peerInterests.size,
     ...fields,
   });
 }
@@ -92,8 +91,18 @@ function sendFrame(socket, value) {
   socket.write(Buffer.concat([header, payload]));
 }
 
+function sendPing(socket) {
+  socket.write(Buffer.from([0x89, 0x00]));
+}
+
+function sendPong(socket, payload = Buffer.alloc(0)) {
+  socket.write(Buffer.concat([Buffer.from([0x8a, payload.length]), payload]));
+}
+
 function readFrames(buffer) {
   const messages = [];
+  const pings = [];
+  let pongs = 0;
   let offset = 0;
 
   while (buffer.length - offset >= 2) {
@@ -133,12 +142,14 @@ function readFrames(buffer) {
     }
 
     if (opcode === 0x1) messages.push(payload.toString("utf8"));
+    if (opcode === 0x9) pings.push(payload);
     if (opcode === 0x8) messages.push(null);
+    if (opcode === 0xA) pongs += 1;
 
     offset += frameLength;
   }
 
-  return { messages, rest: buffer.subarray(offset) };
+  return { messages, pings, pongs, rest: buffer.subarray(offset) };
 }
 
 function parseBase64UrlJson(value) {
@@ -201,7 +212,7 @@ function signalLog(signal) {
   };
 }
 
-function shortVertex(value) {
+function shortPeerKey(value) {
   const address = String(value ?? "").split(":").at(-1);
   return shortAddress(address);
 }
@@ -234,92 +245,98 @@ function socketUsable(entry) {
   return Boolean(entry?.socket && !entry.socket.destroyed && entry.socket.writable);
 }
 
-function addAdjacentInterest(interest) {
-  const fromVertex = vertexKey(interest.offer.lobbyId, interest.offer.tableId, interest.offer.from);
-  const toVertex = vertexKey(interest.offer.lobbyId, interest.offer.tableId, interest.offer.to);
+function addMappedInterest(interest) {
+  const fromPeer = vertexKey(interest.offer.lobbyId, interest.offer.tableId, interest.offer.from);
+  const toPeer = vertexKey(interest.offer.lobbyId, interest.offer.tableId, interest.offer.to);
 
-  addAdjacentEdge(fromVertex, toVertex, interest.key);
-  addAdjacentEdge(toVertex, fromVertex, interest.key);
+  addPeerInterest(fromPeer, interest.key);
+  addPeerInterest(toPeer, interest.key);
 
-  logAction("graph.edge-add", {
+  logAction("map.interest-add", {
     from: shortAddress(interest.offer.from),
     to: shortAddress(interest.offer.to),
     key: interest.key,
-    fromAdjacent: adjacentVertexLog(fromVertex),
-    toAdjacent: adjacentVertexLog(toVertex),
+    fromInterests: peerInterestLog(fromPeer),
+    toInterests: peerInterestLog(toPeer),
   });
 }
 
-function removeAdjacentInterest(interest) {
-  const fromVertex = vertexKey(interest.offer.lobbyId, interest.offer.tableId, interest.offer.from);
-  const toVertex = vertexKey(interest.offer.lobbyId, interest.offer.tableId, interest.offer.to);
+function removeMappedInterest(interest) {
+  const fromPeer = vertexKey(interest.offer.lobbyId, interest.offer.tableId, interest.offer.from);
+  const toPeer = vertexKey(interest.offer.lobbyId, interest.offer.tableId, interest.offer.to);
 
-  removeAdjacentEdge(fromVertex, toVertex, interest.key);
-  removeAdjacentEdge(toVertex, fromVertex, interest.key);
+  removePeerInterest(fromPeer, interest.key);
+  removePeerInterest(toPeer, interest.key);
 
-  logAction("graph.edge-remove", {
+  logAction("map.interest-remove", {
     from: shortAddress(interest.offer.from),
     to: shortAddress(interest.offer.to),
     key: interest.key,
-    fromAdjacent: adjacentVertexLog(fromVertex),
-    toAdjacent: adjacentVertexLog(toVertex),
+    fromInterests: peerInterestLog(fromPeer),
+    toInterests: peerInterestLog(toPeer),
   });
 }
 
-function addAdjacentEdge(vertex, adjacentVertex, key) {
-  const adjacent = adjacency.get(vertex) ?? new Map();
-  const edges = adjacent.get(adjacentVertex) ?? new Set();
-  edges.add(key);
-  adjacent.set(adjacentVertex, edges);
-  adjacency.set(vertex, adjacent);
+function addPeerInterest(peer, key) {
+  const keys = peerInterests.get(peer) ?? new Set();
+  keys.add(key);
+  peerInterests.set(peer, keys);
 }
 
-function removeAdjacentEdge(vertex, adjacentVertex, key) {
-  const adjacent = adjacency.get(vertex);
-  if (!adjacent) return;
-
-  const edges = adjacent.get(adjacentVertex);
-  if (!edges) return;
-
-  edges.delete(key);
-  if (edges.size === 0) adjacent.delete(adjacentVertex);
-  if (adjacent.size === 0) adjacency.delete(vertex);
+function removePeerInterest(peer, key) {
+  const keys = peerInterests.get(peer);
+  if (!keys) return;
+  keys.delete(key);
+  if (keys.size === 0) peerInterests.delete(peer);
 }
 
-function adjacentVertexLog(vertex) {
-  return [...(adjacency.get(vertex)?.keys() ?? [])].map(shortVertex);
+function peerInterestLog(peer) {
+  return [...(peerInterests.get(peer) ?? [])];
 }
 
 function deleteInterest(key, reason) {
   const interest = interests.get(key);
   if (!interest) return;
   interests.delete(key);
-  removeAdjacentInterest(interest);
+  removeMappedInterest(interest);
   logAction("interest.delete", { reason, interest: interestLog(interest) });
 }
 
 function relevantInterests(entry) {
-  const vertex = vertexKey(entry.lobbyId, entry.tableId, entry.peer);
-  const keys = new Set(
-    [...(adjacency.get(vertex)?.values() ?? [])].flatMap((edges) => [...edges])
-  );
-  return [...keys]
+  const peer = vertexKey(entry.lobbyId, entry.tableId, entry.peer);
+  return [...(peerInterests.get(peer) ?? [])]
     .map((key) => interests.get(key))
     .filter(Boolean);
 }
 
-function retireSocket(entry, reason) {
-  if (!entry || entry.retired) return;
-  entry.retired = true;
-  clearTimeout(entry.holdTimer);
-  clearTimeout(entry.collectTimer);
-  sockets.delete(entry.key);
+function interestHasAnySocket(interest) {
+  const { lobbyId, tableId, from, to } = interest.offer;
+  const fromSocket = sockets.get(peerSocketKey(lobbyId, tableId, from));
+  const toSocket = sockets.get(peerSocketKey(lobbyId, tableId, to));
+  return socketUsable(fromSocket) || socketUsable(toSocket);
+}
 
+function deleteOrphanInterests(entry, reason) {
   for (const interest of relevantInterests(entry)) {
+    if (interestHasAnySocket(interest)) {
+      logAction("interest.keep", {
+        reason,
+        interest: interestLog(interest),
+      });
+      continue;
+    }
     deleteInterest(interest.key, reason);
   }
+}
 
-  logAction("socket.retire", {
+function forgetSocket(entry, reason) {
+  if (!entry || entry.forgotten) return;
+  entry.forgotten = true;
+  clearInterval(entry.heartbeatTimer);
+  if (sockets.get(entry.key) === entry) sockets.delete(entry.key);
+  deleteOrphanInterests(entry, reason);
+
+  logAction("socket.forget", {
     reason,
     peer: shortAddress(entry.peer),
     lobbyId: entry.lobbyId,
@@ -330,37 +347,12 @@ function retireSocket(entry, reason) {
 
 function markActivity(entry, reason) {
   if (!entry) return;
-  clearTimeout(entry.holdTimer);
   logAction("socket.activity", {
     reason,
     peer: shortAddress(entry.peer),
     lobbyId: entry.lobbyId,
     tableId: entry.tableId,
   });
-}
-
-function scheduleCollection(entry) {
-  if (!entry || entry.collectTimer || entry.retired) return;
-  const relevant = relevantInterests(entry);
-  if (!entry.good || relevant.some((interest) => interest.state !== "Answered")) return;
-
-  logAction("socket.collect-schedule", {
-    peer: shortAddress(entry.peer),
-    lobbyId: entry.lobbyId,
-    tableId: entry.tableId,
-    delayMs: collectDelayMs,
-    relevant: relevant.length,
-  });
-
-  entry.collectTimer = setTimeout(() => {
-    logAction("socket.collect", {
-      peer: shortAddress(entry.peer),
-      lobbyId: entry.lobbyId,
-      tableId: entry.tableId,
-    });
-    entry.closeReason = "collect";
-    entry.socket.end();
-  }, collectDelayMs);
 }
 
 function scanInterests(reason) {
@@ -386,15 +378,12 @@ function scanInterests(reason) {
     logAction("offer.forward", { interest: interestLog(interest) });
   }
 
-  for (const entry of sockets.values()) {
-    scheduleCollection(entry);
-  }
 }
 
 function storeInterest(signal) {
   const key = interestKey(signal);
   const existing = interests.get(key);
-  if (existing) removeAdjacentInterest(existing);
+  if (existing) removeMappedInterest(existing);
   const interest = {
     key,
     state: "Open",
@@ -405,7 +394,7 @@ function storeInterest(signal) {
     answeredAt: null,
   };
   interests.set(key, interest);
-  addAdjacentInterest(interest);
+  addMappedInterest(interest);
   logAction(existing ? "interest.replace" : "interest.store", { interest: interestLog(interest) });
   scanInterests("interest");
 }
@@ -413,8 +402,8 @@ function storeInterest(signal) {
 function storeAnswer(signal) {
   const key = `${signal.lobbyId}:${signal.tableId}:${signal.to}:${signal.from}`;
   const interest = interests.get(key);
-  if (!interest || interest.state !== "Offered") {
-    logAction("answer.no-open-interest", { answer: signalLog(signal), key });
+  if (!interest) {
+    logAction("answer.no-interest", { answer: signalLog(signal), key });
     return;
   }
 
@@ -445,13 +434,12 @@ function registerSocket(req, socket, signal) {
   const key = socketKey(signal);
   const existing = sockets.get(key);
   if (existing) {
-    logAction("socket.replace", {
+    logAction("socket.supersede", {
       key,
       existingPeer: shortAddress(existing.peer),
       peer: shortAddress(signal.from),
     });
-    retireSocket(existing, "replaced");
-    existing.socket.destroy();
+    forgetSocket(existing, "superseded");
   }
 
   const entry = {
@@ -460,49 +448,72 @@ function registerSocket(req, socket, signal) {
     peer: signal.from,
     lobbyId: signal.lobbyId,
     tableId: signal.tableId,
-    good: false,
-    retired: false,
+    forgotten: false,
     createdAt: Date.now(),
-    closeReason: "close",
-    timedOut: false,
-    holdTimer: null,
-    collectTimer: null,
+    closeReason: "peer-close",
+    sawCloseFrame: false,
+    awaitingPong: false,
+    heartbeatTimer: null,
   };
   sockets.set(key, entry);
 
-  entry.holdTimer = setTimeout(() => {
-    entry.timedOut = true;
-    entry.closeReason = "hold-timeout";
-    logAction("socket.hold-timeout", {
-      peer: shortAddress(entry.peer),
-      lobbyId: entry.lobbyId,
-      tableId: entry.tableId,
-      elapsedMs: Date.now() - entry.createdAt,
-    });
-    entry.socket.destroy();
-  }, holdTimeoutMs);
-
   acceptSocket(req, socket);
   wireSocket(entry);
+  entry.heartbeatTimer = setInterval(() => {
+    if (entry.forgotten) return;
+    if (entry.awaitingPong) {
+      entry.closeReason = "keepalive-failed";
+      logAction("keepalive.failed", {
+        peer: shortAddress(entry.peer),
+        lobbyId: entry.lobbyId,
+        tableId: entry.tableId,
+        heartbeatMs: peerHeartbeatMs,
+      });
+      entry.socket.destroy();
+      forgetSocket(entry, "keepalive-failed");
+      return;
+    }
+
+    entry.awaitingPong = true;
+    try {
+      sendPing(entry.socket);
+    } catch {
+      entry.closeReason = "keepalive-failed";
+      forgetSocket(entry, "keepalive-failed");
+    }
+  }, peerHeartbeatMs);
   socket.on("close", (hadError) => {
+    if (entry.forgotten) {
+      logAction("socket.close-forgotten", {
+        reason: entry.closeReason,
+        closeFrame: entry.sawCloseFrame,
+        peer: shortAddress(entry.peer),
+        lobbyId: entry.lobbyId,
+        tableId: entry.tableId,
+        elapsedMs: Date.now() - entry.createdAt,
+        hadError,
+      });
+      return;
+    }
+
     logAction("socket.close", {
       reason: entry.closeReason,
+      closeFrame: entry.sawCloseFrame,
       peer: shortAddress(entry.peer),
       lobbyId: entry.lobbyId,
       tableId: entry.tableId,
       elapsedMs: Date.now() - entry.createdAt,
       hadError,
-      timedOut: entry.timedOut,
     });
-    retireSocket(entry, entry.closeReason);
+    forgetSocket(entry, entry.closeReason);
   });
   socket.on("error", (error) => {
-    entry.closeReason = "error";
+    entry.closeReason = "peer-close";
     logAction("socket.error", {
       peer: shortAddress(entry.peer),
       error: error?.message ?? String(error),
     });
-    retireSocket(entry, "error");
+    forgetSocket(entry, "peer-close");
   });
 
   logAction("socket.register", {
@@ -522,16 +533,29 @@ function wireSocket(entry) {
       buffer = Buffer.concat([buffer, chunk]);
       const parsed = readFrames(buffer);
       buffer = parsed.rest;
+      if (parsed.pongs > 0) entry.awaitingPong = false;
+      for (const ping of parsed.pings) {
+        entry.awaitingPong = false;
+        logAction("websocket.ping", {
+          peer: shortAddress(entry.peer),
+          lobbyId: entry.lobbyId,
+          tableId: entry.tableId,
+          bytes: ping.length,
+        });
+        sendPong(entry.socket, ping);
+      }
 
       for (const message of parsed.messages) {
+        entry.awaitingPong = false;
         if (message == null) {
-          entry.closeReason = "client-close-frame";
+          entry.closeReason = "peer-close";
+          entry.sawCloseFrame = true;
           logAction("websocket.close-frame", {
             peer: shortAddress(entry.peer),
             lobbyId: entry.lobbyId,
             tableId: entry.tableId,
           });
-          entry.socket.end();
+          forgetSocket(entry, "peer-close");
           return;
         }
 
@@ -556,14 +580,14 @@ function wireSocket(entry) {
           continue;
         }
 
-        if (value?.type === "bootstrap-good") {
-          entry.good = true;
-          logAction("peer.good", {
+        if (value?.type === "bootstrap-bye") {
+          entry.closeReason = "bye";
+          logAction("peer.bye", {
             peer: shortAddress(entry.peer),
             lobbyId: entry.lobbyId,
             tableId: entry.tableId,
           });
-          scanInterests("good");
+          forgetSocket(entry, "bye");
           continue;
         }
 
@@ -574,8 +598,6 @@ function wireSocket(entry) {
         peer: shortAddress(entry.peer),
         error: error?.message ?? String(error),
       });
-      entry.closeReason = "data-error";
-      entry.socket.destroy();
     }
   });
 }
@@ -622,8 +644,6 @@ server.listen(port, hostname, () => {
   logAction("server.ready", {
     url: `http://${hostname}:${port}`,
     endpoint: "/resu",
-    holdTimeoutMs,
-    collectDelayMs,
   });
   console.log(`> Private Poker app ready on http://${hostname}:${port}`);
 });
