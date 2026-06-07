@@ -50,6 +50,21 @@ const differenceItems = [
   ["Why it matters", "The table becomes inspectable: no hidden dealer, no opaque game logic, and no server with privileged card knowledge."]
 ];
 
+const heroSignals = ["21st Century Mental Poker", "Peer-to-peer tables", "Verifiable fairness"];
+
+const protocolSteps = [
+  ["01", "Lock the deck", "Players add cryptographic layers before any card becomes meaningful."],
+  ["02", "Shuffle together", "No single participant owns the order, so no one can quietly control the table."],
+  ["03", "Reveal selectively", "Only the cards needed for the hand are opened, and private cards stay private."],
+  ["04", "Verify the result", "The final hand can be checked against the cryptographic trail and table rules."]
+];
+
+const arenaNotes = [
+  ["Texas Hold'em first", "The first table experience is focused, readable, and built around the most familiar poker rhythm."],
+  ["Committed tables", "Players sit into a bounded session instead of drifting in and out of open-ended lobby play."],
+  ["Proof of skill", "Wins can become durable achievement signals without turning the table into a speculation surface."]
+];
+
 const roadmapItems = [
   ["First game", "Heads-up and tabled Texas Hold'em before Omaha and draw variants."],
   ["P2P network", "Players exchange signed state directly instead of asking a house server."],
@@ -106,6 +121,11 @@ function WelcomeScreen() {
             We are building a peer-to-peer poker room where the deck is
             protected by cryptography, not by promises from a central house.
           </p>
+          <div className="hero-signals" aria-label="Private Poker highlights">
+            {heroSignals.map((item) => (
+              <span key={item}>{item}</span>
+            ))}
+          </div>
         </div>
       </div>
 
@@ -132,6 +152,27 @@ function WelcomeScreen() {
           ))}
         </section>
 
+        <section className="protocol">
+          <div className="section-heading">
+            <p className="section-label">How a hand works</p>
+            <h2>Each player helps secure the deck.</h2>
+            <span>
+              Private Poker is designed around selective revelation: enough
+              information to play and verify the hand, never more than the
+              table should know.
+            </span>
+          </div>
+          <div className="protocol__steps">
+            {protocolSteps.map(([number, title, copy]) => (
+              <article key={number}>
+                <strong>{number}</strong>
+                <h3>{title}</h3>
+                <p>{copy}</p>
+              </article>
+            ))}
+          </div>
+        </section>
+
         <section className="table-section" aria-label="Mock Private Poker table">
           <div className="section-heading">
             <p className="section-label">Experience Poker like never before</p>
@@ -145,15 +186,30 @@ function WelcomeScreen() {
         </section>
 
         <section className="difference">
-          <div>
-            <p className="section-label">How it is different</p>
-            <h2>The house becomes a protocol.</h2>
-          </div>
           <div className="difference__rows">
             {differenceItems.map(([title, copy]) => (
               <article key={title}>
                 <strong>{title}</strong>
                 <span>{copy}</span>
+              </article>
+            ))}
+          </div>
+          <div>
+            <p className="section-label">How it is different</p>
+            <h2>The house becomes a protocol.</h2>
+          </div>
+        </section>
+
+        <section className="arena">
+          <div className="arena__copy">
+            <p className="section-label">Competitive arena</p>
+            <h2>Built for skill, pressure, and proof.</h2>
+          </div>
+          <div className="arena__notes">
+            {arenaNotes.map(([title, copy]) => (
+              <article key={title}>
+                <h3>{title}</h3>
+                <p>{copy}</p>
               </article>
             ))}
           </div>
@@ -182,6 +238,15 @@ function WelcomeScreen() {
               </article>
             ))}
           </div>
+        </section>
+
+        <section className="closing-band">
+          <p className="section-label">Core philosophy</p>
+          <h2>Trust is replaced with evidence.</h2>
+          <span>
+            Private Poker is not trying to make the house more honest. It is
+            trying to remove the house from the critical path.
+          </span>
         </section>
       </div>
     </section>
