@@ -3,6 +3,9 @@
 import crypto from "node:crypto";
 import http from "node:http";
 import next from "next";
+import ws from "next/dist/compiled/ws/index.js";
+
+const { WebSocket, WebSocketServer } = ws;
 
 const dev = process.env.NODE_ENV !== "production";
 const hostname = process.env.HOST ?? "127.0.0.1";
@@ -17,6 +20,7 @@ const peerInterests = new Map();
 const app = next({ dev, hostname, port });
 const handle = app.getRequestHandler();
 let handleUpgrade;
+let wss;
 
 function normalizeHex(value) {
   const text = String(value ?? "").trim();
@@ -52,104 +56,9 @@ function bootstrapUrl(req) {
   return url.pathname === "/resu" ? url : null;
 }
 
-function websocketAccept(key) {
-  return crypto
-    .createHash("sha1")
-    .update(`${key}258EAFA5-E914-47DA-95CA-C5AB0DC85B11`)
-    .digest("base64");
-}
-
-function acceptSocket(req, socket) {
-  socket.write([
-    "HTTP/1.1 101 Switching Protocols",
-    "Upgrade: websocket",
-    "Connection: Upgrade",
-    `Sec-WebSocket-Accept: ${websocketAccept(req.headers["sec-websocket-key"])}`,
-    "",
-    "",
-  ].join("\r\n"));
-}
-
 function sendFrame(socket, value) {
-  const payload = Buffer.from(JSON.stringify(value));
-  let header;
-
-  if (payload.length < 126) {
-    header = Buffer.from([0x81, payload.length]);
-  } else if (payload.length <= 0xffff) {
-    header = Buffer.alloc(4);
-    header[0] = 0x81;
-    header[1] = 126;
-    header.writeUInt16BE(payload.length, 2);
-  } else {
-    header = Buffer.alloc(10);
-    header[0] = 0x81;
-    header[1] = 127;
-    header.writeBigUInt64BE(BigInt(payload.length), 2);
-  }
-
-  socket.write(Buffer.concat([header, payload]));
-}
-
-function sendPing(socket) {
-  socket.write(Buffer.from([0x89, 0x00]));
-}
-
-function sendPong(socket, payload = Buffer.alloc(0)) {
-  socket.write(Buffer.concat([Buffer.from([0x8a, payload.length]), payload]));
-}
-
-function readFrames(buffer) {
-  const messages = [];
-  const pings = [];
-  let pongs = 0;
-  let offset = 0;
-
-  while (buffer.length - offset >= 2) {
-    const first = buffer[offset];
-    const second = buffer[offset + 1];
-    const opcode = first & 0x0f;
-    const masked = Boolean(second & 0x80);
-    let length = second & 0x7f;
-    let headerLength = 2;
-
-    if (length === 126) {
-      if (buffer.length - offset < 4) break;
-      length = buffer.readUInt16BE(offset + 2);
-      headerLength = 4;
-    } else if (length === 127) {
-      if (buffer.length - offset < 10) break;
-      const bigLength = buffer.readBigUInt64BE(offset + 2);
-      if (bigLength > BigInt(maxFrameBytes)) throw new Error("bootstrap frame too large");
-      length = Number(bigLength);
-      headerLength = 10;
-    }
-
-    const maskLength = masked ? 4 : 0;
-    const frameLength = headerLength + maskLength + length;
-    if (buffer.length - offset < frameLength) break;
-    if (length > maxFrameBytes) throw new Error("bootstrap frame too large");
-
-    const maskOffset = offset + headerLength;
-    const payloadOffset = maskOffset + maskLength;
-    const payload = Buffer.from(buffer.subarray(payloadOffset, payloadOffset + length));
-
-    if (masked) {
-      const mask = buffer.subarray(maskOffset, maskOffset + 4);
-      for (let index = 0; index < payload.length; index += 1) {
-        payload[index] ^= mask[index % 4];
-      }
-    }
-
-    if (opcode === 0x1) messages.push(payload.toString("utf8"));
-    if (opcode === 0x9) pings.push(payload);
-    if (opcode === 0x8) messages.push(null);
-    if (opcode === 0xA) pongs += 1;
-
-    offset += frameLength;
-  }
-
-  return { messages, pings, pongs, rest: buffer.subarray(offset) };
+  if (socket.readyState !== WebSocket.OPEN) return;
+  socket.send(JSON.stringify(value));
 }
 
 function parseBase64UrlJson(value) {
@@ -242,7 +151,7 @@ function envelope(signal, recipient) {
 }
 
 function socketUsable(entry) {
-  return Boolean(entry?.socket && !entry.socket.destroyed && entry.socket.writable);
+  return Boolean(entry?.socket && entry.socket.readyState === WebSocket.OPEN);
 }
 
 function addMappedInterest(interest) {
@@ -430,7 +339,7 @@ function storeAnswer(signal) {
   scanInterests("answer");
 }
 
-function registerSocket(req, socket, signal) {
+function registerSocket(socket, signal) {
   const key = socketKey(signal);
   const existing = sockets.get(key);
   if (existing) {
@@ -457,7 +366,6 @@ function registerSocket(req, socket, signal) {
   };
   sockets.set(key, entry);
 
-  acceptSocket(req, socket);
   wireSocket(entry);
   entry.heartbeatTimer = setInterval(() => {
     if (entry.forgotten) return;
@@ -469,20 +377,26 @@ function registerSocket(req, socket, signal) {
         tableId: entry.tableId,
         heartbeatMs: peerHeartbeatMs,
       });
-      entry.socket.destroy();
+      entry.socket.terminate();
       forgetSocket(entry, "keepalive-failed");
       return;
     }
 
     entry.awaitingPong = true;
     try {
-      sendPing(entry.socket);
+      logAction("keepalive.ping", {
+        peer: shortAddress(entry.peer),
+        lobbyId: entry.lobbyId,
+        tableId: entry.tableId,
+        heartbeatMs: peerHeartbeatMs,
+      });
+      entry.socket.ping();
     } catch {
       entry.closeReason = "keepalive-failed";
       forgetSocket(entry, "keepalive-failed");
     }
   }, peerHeartbeatMs);
-  socket.on("close", (hadError) => {
+  socket.on("close", (code, reason) => {
     if (entry.forgotten) {
       logAction("socket.close-forgotten", {
         reason: entry.closeReason,
@@ -491,11 +405,13 @@ function registerSocket(req, socket, signal) {
         lobbyId: entry.lobbyId,
         tableId: entry.tableId,
         elapsedMs: Date.now() - entry.createdAt,
-        hadError,
+        code,
+        closeReasonText: reason.toString(),
       });
       return;
     }
 
+    entry.sawCloseFrame = code !== 1006;
     logAction("socket.close", {
       reason: entry.closeReason,
       closeFrame: entry.sawCloseFrame,
@@ -503,7 +419,8 @@ function registerSocket(req, socket, signal) {
       lobbyId: entry.lobbyId,
       tableId: entry.tableId,
       elapsedMs: Date.now() - entry.createdAt,
-      hadError,
+      code,
+      closeReasonText: reason.toString(),
     });
     forgetSocket(entry, entry.closeReason);
   });
@@ -526,73 +443,62 @@ function registerSocket(req, socket, signal) {
 }
 
 function wireSocket(entry) {
-  let buffer = Buffer.alloc(0);
+  entry.socket.on("pong", () => {
+    entry.awaitingPong = false;
+    logAction("websocket.pong", {
+      peer: shortAddress(entry.peer),
+      lobbyId: entry.lobbyId,
+      tableId: entry.tableId,
+    });
+  });
 
-  entry.socket.on("data", (chunk) => {
+  entry.socket.on("ping", (payload) => {
+    entry.awaitingPong = false;
+    logAction("websocket.ping", {
+      peer: shortAddress(entry.peer),
+      lobbyId: entry.lobbyId,
+      tableId: entry.tableId,
+      bytes: payload.length,
+    });
+  });
+
+  entry.socket.on("message", (data) => {
+    if (entry.forgotten) return;
     try {
-      buffer = Buffer.concat([buffer, chunk]);
-      const parsed = readFrames(buffer);
-      buffer = parsed.rest;
-      if (parsed.pongs > 0) entry.awaitingPong = false;
-      for (const ping of parsed.pings) {
-        entry.awaitingPong = false;
-        logAction("websocket.ping", {
+      entry.awaitingPong = false;
+      const value = JSON.parse(data.toString());
+      if (value?.type === "bootstrap-interest") {
+        const signal = parseSignal(value.signal, "offer");
+        if (signal.from !== entry.peer || signal.lobbyId !== entry.lobbyId || signal.tableId !== entry.tableId) {
+          logAction("interest.reject-socket-mismatch", { signal: signalLog(signal) });
+          return;
+        }
+        storeInterest(signal);
+        return;
+      }
+
+      if (value?.type === "bootstrap-answer") {
+        const signal = parseSignal(value.signal, "answer");
+        if (signal.from !== entry.peer || signal.lobbyId !== entry.lobbyId || signal.tableId !== entry.tableId) {
+          logAction("answer.reject-socket-mismatch", { answer: signalLog(signal) });
+          return;
+        }
+        storeAnswer(signal);
+        return;
+      }
+
+      if (value?.type === "bootstrap-bye") {
+        entry.closeReason = "bye";
+        logAction("peer.bye", {
           peer: shortAddress(entry.peer),
           lobbyId: entry.lobbyId,
           tableId: entry.tableId,
-          bytes: ping.length,
         });
-        sendPong(entry.socket, ping);
+        forgetSocket(entry, "bye");
+        return;
       }
 
-      for (const message of parsed.messages) {
-        entry.awaitingPong = false;
-        if (message == null) {
-          entry.closeReason = "peer-close";
-          entry.sawCloseFrame = true;
-          logAction("websocket.close-frame", {
-            peer: shortAddress(entry.peer),
-            lobbyId: entry.lobbyId,
-            tableId: entry.tableId,
-          });
-          forgetSocket(entry, "peer-close");
-          return;
-        }
-
-        const value = JSON.parse(message);
-        if (value?.type === "bootstrap-interest") {
-          const signal = parseSignal(value.signal, "offer");
-          if (signal.from !== entry.peer || signal.lobbyId !== entry.lobbyId || signal.tableId !== entry.tableId) {
-            logAction("interest.reject-socket-mismatch", { signal: signalLog(signal) });
-            continue;
-          }
-          storeInterest(signal);
-          continue;
-        }
-
-        if (value?.type === "bootstrap-answer") {
-          const signal = parseSignal(value.signal, "answer");
-          if (signal.from !== entry.peer || signal.lobbyId !== entry.lobbyId || signal.tableId !== entry.tableId) {
-            logAction("answer.reject-socket-mismatch", { answer: signalLog(signal) });
-            continue;
-          }
-          storeAnswer(signal);
-          continue;
-        }
-
-        if (value?.type === "bootstrap-bye") {
-          entry.closeReason = "bye";
-          logAction("peer.bye", {
-            peer: shortAddress(entry.peer),
-            lobbyId: entry.lobbyId,
-            tableId: entry.tableId,
-          });
-          forgetSocket(entry, "bye");
-          continue;
-        }
-
-        logAction("message.ignore", { type: value?.type });
-      }
+      logAction("message.ignore", { type: value?.type });
     } catch (error) {
       logAction("websocket.data-error", {
         peer: shortAddress(entry.peer),
@@ -602,7 +508,7 @@ function wireSocket(entry) {
   });
 }
 
-function handleBootstrapUpgrade(req, socket) {
+function handleBootstrapUpgrade(req, socket, head = Buffer.alloc(0)) {
   const url = bootstrapUrl(req);
   if (!url) return false;
 
@@ -615,8 +521,9 @@ function handleBootstrapUpgrade(req, socket) {
 
   try {
     const signal = parseSignal(parseBase64UrlJson(url.searchParams.get("i")), "offer");
-    registerSocket(req, socket, signal);
-    storeInterest(signal);
+    wss.handleUpgrade(req, socket, head, (websocket) => {
+      registerSocket(websocket, signal);
+    });
   } catch (error) {
     logAction("request.reject-invalid-interest", {
       path: req.url,
@@ -630,10 +537,18 @@ function handleBootstrapUpgrade(req, socket) {
 
 await app.prepare();
 handleUpgrade = app.getUpgradeHandler();
+wss = new WebSocketServer({
+  noServer: true,
+  maxPayload: maxFrameBytes,
+});
 
 const server = http.createServer((req, res) => {
   handle(req, res);
 });
+server.timeout = 0;
+server.requestTimeout = 0;
+server.headersTimeout = 0;
+server.keepAliveTimeout = 0;
 
 server.on("upgrade", (req, socket, head) => {
   if (handleBootstrapUpgrade(req, socket, head)) return;
