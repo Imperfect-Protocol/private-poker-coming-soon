@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import { useEffect, useState } from "react";
 
 const principles = [
@@ -99,10 +100,10 @@ function SplashScreen({ isFading }) {
       <img className="splash__image" src="/splash.jpg" alt="" />
       <div className="splash__wash" />
       <div className="splash__content">
-        <p className="kicker">Imperfect Protocol presents</p>
+        <p className="kicker"></p>
         <h1>Private Poker</h1>
         <div className="splash__rule" />
-        <p className="splash__status">Dealerless poker is loading</p>
+        <p className="splash__status">by Imperfect Protocol</p>
       </div>
     </section>
   );
@@ -117,14 +118,21 @@ function WelcomeScreen() {
         <div className="welcome__copy">
           <p className="kicker">Coming soon</p>
           <h1>Welcome to Private Poker!</h1>
-          <p className="lead">
-            We are building a peer-to-peer poker room where the deck is
-            protected by cryptography, not by promises from a central house.
-          </p>
-          <div className="hero-signals" aria-label="Private Poker highlights">
-            {heroSignals.map((item) => (
-              <span key={item}>{item}</span>
-            ))}
+          <div className="hero-intro">
+            <p className="lead">
+              We are building a peer-to-peer poker room where the deck is
+              protected by cryptography, not by promises from a central house.
+            </p>
+          </div>
+          <div className="hero-footer">
+            <div className="hero-signals" aria-label="Private Poker highlights">
+              {heroSignals.map((item) => (
+                <span key={item}>{item}</span>
+              ))}
+            </div>
+            <Link className="gold-button" href="/join">
+              Join the game
+            </Link>
           </div>
         </div>
       </div>
