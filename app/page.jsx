@@ -1,6 +1,5 @@
 "use client";
 
-import Link from "next/link";
 import { useEffect, useState } from "react";
 
 const principles = [
@@ -130,9 +129,12 @@ function WelcomeScreen() {
                 <span key={item}>{item}</span>
               ))}
             </div>
-            <Link className="gold-button" href="/join">
+            <a
+              className="gold-button"
+              href="mailto:imperfect-protocol@protonmail.com?subject=Private%20Poker%20Membership"
+            >
               Join the game
-            </Link>
+            </a>
           </div>
         </div>
       </div>
