@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import SiteNav from "./SiteNav";
 
 const principles = [
   {
@@ -111,11 +112,11 @@ function SplashScreen({ isFading }) {
 function WelcomeScreen() {
   return (
     <section className="welcome">
+      <SiteNav />
       <div className="welcome__hero">
         <img className="welcome__image" src="/table.jpg" alt="" />
         <div className="welcome__shade" />
         <div className="welcome__copy">
-          <p className="kicker">Coming soon</p>
           <h1>Welcome to Private Poker!</h1>
           <div className="hero-intro">
             <p className="lead">
@@ -129,12 +130,6 @@ function WelcomeScreen() {
                 <span key={item}>{item}</span>
               ))}
             </div>
-            <a
-              className="gold-button"
-              href="mailto:imperfect-protocol@protonmail.com?subject=Private%20Poker%20Membership"
-            >
-              Join the game
-            </a>
           </div>
         </div>
       </div>
@@ -258,6 +253,7 @@ function WelcomeScreen() {
             trying to remove the house from the critical path.
           </span>
         </section>
+
       </div>
     </section>
   );
