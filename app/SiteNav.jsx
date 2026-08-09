@@ -6,7 +6,6 @@ const navItems = [
   ["Who are we", "/who-are-we"],
   ["Get Started", "/test-wallet"],
   ["Contact Us", "/contact"],
-  ["The Grid", "/the-grid"],
 ];
 
 export default function SiteNav() {

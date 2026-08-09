@@ -7,7 +7,6 @@ import path from "node:path";
 import { AsyncLocalStorage } from "node:async_hooks";
 import { createRequire } from "node:module";
 import { fileURLToPath } from "node:url";
-import { attachMesh, handleMeshRequest } from "./mesh.mjs";
 
 const require = createRequire(import.meta.url);
 const serverPath = fileURLToPath(import.meta.url);
@@ -960,10 +959,6 @@ async function serveOutput(req, res, pathname, search, statusCode = 200, headers
 }
 
 async function handleRequest(req, res) {
-  if (handleMeshRequest(req, res)) {
-    return;
-  }
-
   const url = new URL(req.url || "/", `http://${req.headers.host || "localhost"}`);
   let pathname = normalizeRequestPath(url.pathname);
   let search = url.search;
@@ -1074,8 +1069,6 @@ const server = http.createServer((req, res) => {
     res.end("Internal Server Error\n");
   });
 });
-
-attachMesh(server);
 
 server.listen(port, host, () => {
   console.log(`Serving ${outputRoot}`);

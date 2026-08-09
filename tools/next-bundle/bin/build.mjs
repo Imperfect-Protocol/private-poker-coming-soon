@@ -663,10 +663,6 @@ async function main() {
   });
 
   await fs.copyFile(serverTemplatePath, path.join(outputDir, "server.mjs"));
-  await fs.copyFile(
-    path.join(projectRoot, "lib", "mesh.mjs"),
-    path.join(outputDir, "mesh.mjs")
-  );
 
   console.log(`Build output written to ${path.relative(projectRoot, outputDir)}`);
   console.log(

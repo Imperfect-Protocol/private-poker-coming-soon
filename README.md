@@ -1,7 +1,6 @@
 # Private Poker Coming Soon
 
-A mock replacement for the Private Poker app with the `/mesh` bootstrap endpoint
-embedded in the bundled Next.js runtime.
+A mock replacement for the Private Poker app.
 
 ## Flow
 
@@ -24,8 +23,8 @@ npm run dev
 ```
 
 `next-bundle` is a local project dependency in `tools/next-bundle`. Its server
-template attaches the app-local Signal Server while generating
-`.next-bundle/server.mjs`; the generated server file is not post-patched.
+template generates `.next-bundle/server.mjs`; the generated server file is not
+post-patched.
 
-The app has no wallet, blockchain, RPC, or cryptography dependencies. It uses
-Next.js, React, static assets, and the app-local Signal Server bootstrap route.
+The app has no wallet, blockchain, RPC, cryptography, or signaling-server
+dependencies. It uses Next.js, React, and static assets.
