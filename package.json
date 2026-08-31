@@ -4,8 +4,11 @@
   "private": true,
   "scripts": {
     "dev": "next dev",
+    "preview": "npm run bundle && node .next-bundle/server.mjs",
     "build": "next build",
-    "start": "next start",
+    "bundle": "npx next-bundle",
+    "bundle-wasmer": "npm run bundle && cp wasmer.toml app.yaml .next-bundle/",
+    "start": "node .next-bundle/server.mjs",
     "lint": "next lint"
   },
   "dependencies": {
@@ -13,5 +16,7 @@
     "react": "19.2.3",
     "react-dom": "19.2.3"
   },
-  "devDependencies": {}
+  "devDependencies": {
+    "next-bundle": "file:tools/next-bundle"
+  }
 }
