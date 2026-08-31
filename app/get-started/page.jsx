@@ -1,7 +1,7 @@
 import SiteNav from "../SiteNav";
 
-const contactEmail = "imperfect-protocol@protonmail.com";
-const mailtoHref = `mailto:${contactEmail}?subject=Private%20Poker%20Membership`;
+const ppdcFaucetHref = "https://private-poker-faucet.wasmer.app";
+const devnetHref = "https://private-poker-devnet.wasmer.app";
 
 const walletLinks = [
   ["MetaMask", "https://metamask.io/"],
@@ -34,7 +34,7 @@ const setupSteps = [
     why:
       "Why: Private Poker testing runs on Arbitrum Sepolia, so your wallet needs to know that network before it can show balances or connect correctly.",
     links: [
-      ["Arbitrum chain information", "https://docs.arbitrum.io/for-devs/dev-tools-and-resources/chain-info"],
+      ["Arbitrum Chain Information", "https://docs.arbitrum.io/for-devs/dev-tools-and-resources/chain-info"],
       ["ChainList Arbitrum Sepolia", "https://chainlist.org/chain/421614"]
     ]
   },
@@ -53,26 +53,10 @@ const setupSteps = [
     why:
       "Why: if your faucet gave you ETH on Ethereum Sepolia, the bridge moves it to the Arbitrum Sepolia network where Private Poker testing happens.",
     links: [
-      ["Open Arbitrum Portal bridge", "https://portal.arbitrum.io/bridge?amount=0&sourceChain=sepolia&destinationChain=arbitrum-sepolia&tab=bridge&sanitized=true"],
+      ["Open Arbitrum Portal Bridge", "https://portal.arbitrum.io/bridge?amount=0&sourceChain=sepolia&destinationChain=arbitrum-sepolia&tab=bridge&sanitized=true"],
       ["Arbitrum Sepolia Faucet", "https://ethfaucet.com/networks/arbitrum"]
     ]
   },
-  {
-    title: "Ask us to fund your wallet test PPDC",
-    body:
-      "Send us an email with your wallet address and we will fund your wallet with test PPDC tokens.",
-    why:
-      "Why: PPDC is the test chip token for the Private Poker test environment, so we need to send it to the wallet you will use.",
-    links: [[contactEmail, mailtoHref]]
-  },
-  {
-    title: "Wait for further instructions",
-    body:
-      "We will reply with the next steps for joining the Private Poker test flow.",
-    why:
-      "Why: the test flow is invite-guided for now, so we can make sure your wallet is funded and you have the right table instructions.",
-    links: []
-  }
 ];
 
 export const metadata = {
@@ -93,7 +77,7 @@ export default function TestWalletPage() {
           <h1>Get ready for Private Poker testing.</h1>
           <span>
             These steps prepare a wallet for Arbitrum Sepolia, bridge test ETH,
-            and request PPDC test tokens from us.
+            fund it with PPDC, and join Private Poker devnet testing.
           </span>
         </div>
 
@@ -125,22 +109,36 @@ export default function TestWalletPage() {
         </ol>
 
         <section className="wallet-contact">
-          <p className="section-label">Contact</p>
-          <h2>Need Test PPDC?</h2>
+          <p className="section-label">Devnet</p>
+          <h2>Join testing</h2>
           <p>
-            Send us email to:{" "}
-            <a href="mailto:imperfect-protocol@protonmail.com?subject=Private%20Poker%20Membership">
-              imperfect-protocol@protonmail.com
-            </a>
+            First fund your wallet with Test PPDC from faucet, and then join testing on Devnet.
+          </p>
+          <p>
+            Upon account creation you will be asked to send an email to get your account verified.
           </p>
           <div className="contact-actions">
             <a
               className="contact-button"
-              href="/contact"
+              href={ppdcFaucetHref}
+              rel="noreferrer"
+              target="_blank"
             >
-              Contact Us
+              Fund Test PPDC
+            </a>
+            →
+            <a
+              className="contact-button"
+              href={devnetHref}
+              rel="noreferrer"
+              target="_blank"
+            >
+              Join Testing On Devnet
             </a>
           </div>
+          <p>
+            🚫 All participants must be 18+.
+          </p>
         </section>
       </section>
     </main>
