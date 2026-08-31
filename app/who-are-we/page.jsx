@@ -1,5 +1,6 @@
 import Link from "next/link";
 import SiteNav from "../SiteNav";
+import DemoDisclaimerFooter from "../DemoDisclaimerFooter";
 
 const builderNotes = [
   {
@@ -51,8 +52,7 @@ export default function WhoAreWePage() {
           <p className="section-label">Who are we?</p>
           <h1>We are the builders.</h1>
           <span>
-            Private Poker by Imperfect Protocol is led by Sadhbh Code (<a
-            href="https://github.com/sadhbh-c0d3">sadhbh-c0d3</a>): systems
+            Private Poker by Imperfect Protocol is led by Sonia: systems
             engineer, protocol designer, and founder who has spent more than two
             decades turning strange, hard technical problems into working
             software.
@@ -100,14 +100,9 @@ export default function WhoAreWePage() {
             <Link className="contact-button" href="/">
               Back Home
             </Link>
-            <a
-              className="contact-learn-link"
-              href="/contact"
-            >
-              Contact Imperfect Protocol
-            </a>
           </div>
         </section>
+        <DemoDisclaimerFooter />
       </section>
     </main>
   );

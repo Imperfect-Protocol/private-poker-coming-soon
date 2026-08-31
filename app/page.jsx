@@ -1,7 +1,5 @@
-"use client";
-
-import { useEffect, useState } from "react";
 import SiteNav from "./SiteNav";
+import DemoDisclaimerFooter from "./DemoDisclaimerFooter";
 
 const principles = [
   {
@@ -74,38 +72,10 @@ const roadmapItems = [
 ];
 
 export default function Home() {
-  const [showSplash, setShowSplash] = useState(true);
-  const [fadeSplash, setFadeSplash] = useState(false);
-
-  useEffect(() => {
-    const fadeTimer = window.setTimeout(() => setFadeSplash(true), 2200);
-    const hideTimer = window.setTimeout(() => setShowSplash(false), 2800);
-
-    return () => {
-      window.clearTimeout(fadeTimer);
-      window.clearTimeout(hideTimer);
-    };
-  }, []);
-
   return (
     <main className="site-shell">
-      {showSplash ? <SplashScreen isFading={fadeSplash} /> : <WelcomeScreen />}
+      <WelcomeScreen />
     </main>
-  );
-}
-
-function SplashScreen({ isFading }) {
-  return (
-    <section className={`splash ${isFading ? "splash--fade" : ""}`}>
-      <img className="splash__image" src="/splash.jpg" alt="" />
-      <div className="splash__wash" />
-      <div className="splash__content">
-        <p className="kicker"></p>
-        <h1>Private Poker</h1>
-        <div className="splash__rule" />
-        <p className="splash__status">by Imperfect Protocol</p>
-      </div>
-    </section>
   );
 }
 
@@ -255,6 +225,7 @@ function WelcomeScreen() {
         </section>
 
       </div>
+      <DemoDisclaimerFooter />
     </section>
   );
 }

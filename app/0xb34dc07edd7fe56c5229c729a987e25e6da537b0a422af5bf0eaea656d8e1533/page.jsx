@@ -1,4 +1,5 @@
 import SiteNav from "../SiteNav";
+import DemoDisclaimerFooter from "../DemoDisclaimerFooter";
 
 const ppdcFaucetHref = "https://private-poker-faucet.wasmer.app";
 const devnetHref = "https://private-poker-devnet.wasmer.app";
@@ -140,6 +141,7 @@ export default function TestWalletPage() {
             🚫 All participants must be 18+.
           </p>
         </section>
+        <DemoDisclaimerFooter />
       </section>
     </main>
   );

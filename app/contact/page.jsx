@@ -1,4 +1,5 @@
 import SiteNav from "../SiteNav";
+import DemoDisclaimerFooter from "../DemoDisclaimerFooter";
 
 export const metadata = {
   title: "Contact Us | Private Poker",
@@ -15,25 +16,33 @@ export default function ContactPage() {
       <section className="contact-page__shell">
         <section className="contact-band" id="contact">
           <p className="section-label">Contact</p>
-          <h2>Contact Private Poker Team</h2>
+          <h2>Contact Our Team</h2>
           <p>
             Send us email to:{" "}
             <a href="mailto:imperfect-protocol@protonmail.com?subject=Private%20Poker%20Membership">
-              imperfect-protocol@protonmail.com
+              <strong>imperfect-protocol@protonmail.com</strong>
             </a>
           </p>
-          <div className="contact-actions">
+          <p>
+            or visit our GitHub repository:{" "}
+            <a
+              href="https://github.com/Imperfect-Protocol"
+              rel="noreferrer"
+              target="_blank"
+            >
+              github.com/Imperfect-Protocol
+            </a>
+          </p>
+          <div className="contact-actions contact-actions--lower">
             <a
               className="contact-button"
               href="mailto:imperfect-protocol@protonmail.com?subject=Private%20Poker%20Membership"
             >
               Contact Us
             </a>
-            <a className="contact-learn-link" href="/test-wallet">
-              Learn more about setting up test wallet
-            </a>
           </div>
         </section>
+        <DemoDisclaimerFooter />
       </section>
     </main>
   );
