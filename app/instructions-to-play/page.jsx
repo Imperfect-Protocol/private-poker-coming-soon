@@ -75,7 +75,7 @@ export default function TestWalletPage() {
       <section className="test-wallet-shell">
         <div className="test-wallet-header">
           <p className="section-label">Test wallet setup</p>
-          <h1>Get ready for Private Poker testing.</h1>
+          <h1>Instructions how to join Private Poker testing</h1>
           <span>
             These steps prepare a wallet for Arbitrum Sepolia, bridge test ETH,
             fund it with PPDC, and join Private Poker devnet testing.

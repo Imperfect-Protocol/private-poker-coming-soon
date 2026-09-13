@@ -25,19 +25,19 @@ const principles = [
 const storyBlocks = [
   {
     label: "1979 problem",
-    title: "Mental Poker, made practical.",
+    title: "Mental Poker, made practical",
     copy:
       "The original challenge was simple to state and hard to build: can people play a fair card game remotely without trusting a dealer? Private Poker turns that question into a modern product surface."
   },
   {
     label: "Competitive format",
-    title: "Structured play over open-ended wagering.",
+    title: "Structured play over open-ended wagering",
     copy:
       "The experience is framed around committed tables, fixed rules, and bounded participation, so the focus stays on skill, strategy, and transparent outcomes."
   },
   {
     label: "Zero-trust engine",
-    title: "Fairness that does not ask for belief.",
+    title: "Fairness that does not ask for belief",
     copy:
       "Cards, actions, and outcomes are designed to be checked through cryptography and settlement logic rather than hidden server authority."
   }
@@ -49,7 +49,7 @@ const differenceItems = [
   ["Why it matters", "The table becomes inspectable: no hidden dealer, no opaque game logic, and no server with privileged card knowledge."]
 ];
 
-const heroSignals = ["21st Century Mental Poker", "Peer-to-peer tables", "Verifiable fairness"];
+const heroSignals = ["Mental Poker", "Peer To Peer", "Blockchain", "Zero Trust"];
 
 const protocolSteps = [
   ["01", "Lock the deck", "Players add cryptographic layers before any card becomes meaningful."],
@@ -87,11 +87,11 @@ function WelcomeScreen() {
         <img className="welcome__image" src="/table.jpg" alt="" />
         <div className="welcome__shade" />
         <div className="welcome__copy">
-          <h1>Welcome to Private Poker!</h1>
+          <h1>Private&nbsp;Poker Peer&nbsp;To&nbsp;Peer On&nbsp;Blockchain</h1>
           <div className="hero-intro">
             <p className="lead">
-              We are building a peer-to-peer poker room where the deck is
-              protected by cryptography, not by promises from a central house.
+              P2P technology for seamless gameplay protected by advanced cryptography.
+              Blockchain settles the balances.
             </p>
           </div>
           <div className="hero-footer">
@@ -107,7 +107,7 @@ function WelcomeScreen() {
       <div className="content-band">
         <section className="intro">
           <p className="section-label">The idea</p>
-          <h2>Poker with privacy as the table stakes.</h2>
+          <h2>Privacy as the table staks</h2>
           <p>
             Private Poker takes the old mental-poker question seriously: can
             people play a fair hand over a communications channel without a
@@ -130,7 +130,7 @@ function WelcomeScreen() {
         <section className="protocol">
           <div className="section-heading">
             <p className="section-label">How a hand works</p>
-            <h2>Each player helps secure the deck.</h2>
+            <h2>Zero Trust Collaborative Shuffle</h2>
             <span>
               Private Poker is designed around selective revelation: enough
               information to play and verify the hand, never more than the
@@ -151,7 +151,7 @@ function WelcomeScreen() {
         <section className="table-section" aria-label="Mock Private Poker table">
           <div className="section-heading">
             <p className="section-label">Experience Poker like never before</p>
-            <h2>Peer To Peer Poker Experience.</h2>
+            <h2>Fully Decentralised Gameplay</h2>
             <span>
               A fully decentralized, serverless table where players coordinate
               directly and the house is replaced by verifiable protocol logic.
@@ -171,14 +171,14 @@ function WelcomeScreen() {
           </div>
           <div>
             <p className="section-label">How it is different</p>
-            <h2>The house becomes a protocol.</h2>
+            <h2>House As A Protocol</h2>
           </div>
         </section>
 
         <section className="arena">
           <div className="arena__copy">
             <p className="section-label">Competitive arena</p>
-            <h2>Built for skill, pressure, and proof.</h2>
+            <h2>Test Your Skills</h2>
           </div>
           <div className="arena__notes">
             {arenaNotes.map(([title, copy]) => (
@@ -203,7 +203,7 @@ function WelcomeScreen() {
         <section className="roadmap">
           <div>
             <p className="section-label">What we are building</p>
-            <h2>A poker room where fairness is something you can verify.</h2>
+            <h2>Trust No One Verify</h2>
           </div>
           <div className="roadmap__grid">
             {roadmapItems.map(([title, copy]) => (
@@ -217,7 +217,7 @@ function WelcomeScreen() {
 
         <section className="closing-band">
           <p className="section-label">Core philosophy</p>
-          <h2>Trust is replaced with evidence.</h2>
+          <h2>Trust is replaced with evidence</h2>
           <span>
             Private Poker is not trying to make the house more honest. It is
             trying to remove the house from the critical path.

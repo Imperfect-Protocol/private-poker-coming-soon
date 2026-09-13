@@ -50,7 +50,7 @@ export default function WhoAreWePage() {
       <section className="builder-shell">
         <div className="builder-hero">
           <p className="section-label">Who are we?</p>
-          <h1>We are the builders.</h1>
+          <h1>We are the builders</h1>
           <span>
             Private Poker by Imperfect Protocol is led by Sonia: systems
             engineer, protocol designer, and founder who has spent more than two
