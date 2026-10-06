@@ -1,3 +1,4 @@
+import Link from "next/link";
 import SiteNav from "../SiteNav";
 import DemoDisclaimerFooter from "../DemoDisclaimerFooter";
 
@@ -26,14 +27,42 @@ const setupSteps = [
       "Install an Ethereum-compatible wallet. MetaMask is the most common starting point, but Rabby, Coinbase Wallet, and Rainbow are also good options.",
     why:
       "Why: the wallet is your test identity. It holds your test ETH, receives PPDC, and signs actions when you try the Private Poker flow.",
+    more: (
+      <>
+        <a className="contact-button-blue"
+          href="https://metamask.io/"
+          target="_blank"
+        >
+          Get MetaMask
+        </a>
+        <p>or another wallet:</p>
+      </>
+    ),
     links: walletLinks
   },
   {
     title: "Add Arbitrum Sepolia network",
     body:
-      "Add the Arbitrum Sepolia test network to your wallet. You can use the official Arbitrum chain information or add chain 421614 through ChainList.",
+      (<>
+        Add the <b>Arbitrum Sepolia Network to <u>your wallet</u></b>.
+      </>),
     why:
       "Why: Private Poker testing runs on Arbitrum Sepolia, so your wallet needs to know that network before it can show balances or connect correctly.",
+    more: (
+      <>
+        <div className="wallet-step__more">
+          <p><b>Arbitrum Sepolia</b></p>
+          <hr />
+          <pre>
+            CHAIN_ID = 421614
+          </pre>
+          <pre>
+            RPC_URL = https://sepolia-rollup.arbitrum.io/rpc
+          </pre>
+        </div>
+        <p>or alternative settings:</p>
+      </>
+    ),
     links: [
       ["Arbitrum Chain Information", "https://docs.arbitrum.io/for-devs/dev-tools-and-resources/chain-info"],
       ["ChainList Arbitrum Sepolia", "https://chainlist.org/chain/421614"]
@@ -45,6 +74,17 @@ const setupSteps = [
       "Use a Sepolia ETH faucet to get test ETH. Some faucets fund Ethereum Sepolia, while Arbitrum faucets can fund Arbitrum Sepolia directly.",
     why:
       "Why: test ETH pays the small gas fees needed to move test tokens and interact with the test network. It has no mainnet cash value.",
+    more: (
+      <>
+        <a className="contact-button-blue"
+          href="https://cloud.google.com/application/web3/faucet/ethereum/sepolia"
+          target="_blank"
+        >
+          Google Sepolia Faucet
+        </a>
+        <p>or another faucet:</p>
+      </>
+    ),
     links: faucetLinks
   },
   {
@@ -53,10 +93,16 @@ const setupSteps = [
       "Use the Arbitrum Portal bridge to move your Sepolia ETH from Ethereum Sepolia to Arbitrum Sepolia. You can skip this step if you used an Arbitrum Sepolia faucet such as ethfaucet.com.",
     why:
       "Why: if your faucet gave you ETH on Ethereum Sepolia, the bridge moves it to the Arbitrum Sepolia network where Private Poker testing happens.",
-    links: [
-      ["Open Arbitrum Portal Bridge", "https://portal.arbitrum.io/bridge?amount=0&sourceChain=sepolia&destinationChain=arbitrum-sepolia&tab=bridge&sanitized=true"],
-      ["Arbitrum Sepolia Faucet", "https://ethfaucet.com/networks/arbitrum"]
-    ]
+    more: (
+      <>
+        <a className="contact-button-blue"
+          href="https://portal.arbitrum.io/bridge?amount=0&sourceChain=sepolia&destinationChain=arbitrum-sepolia&tab=bridge&sanitized=true"
+          target="_blank"
+        >
+          Arbitrum Bridge
+        </a>
+      </>
+    ),
   },
 ];
 
@@ -77,8 +123,13 @@ export default function TestWalletPage() {
           <p className="section-label">Test wallet setup</p>
           <h1>Instructions how to join Private Poker testing</h1>
           <span>
-            These steps prepare a wallet for Arbitrum Sepolia, bridge test ETH,
-            fund it with PPDC, and join Private Poker devnet testing.
+            <p><b>Private Poker</b> is currently a <b><u>technology demo running on
+            the test network</u>&nbsp;<i>(Arbitrum Sepolia)</i></b>.</p>
+          </span>
+          <span>
+            Below are general instructions, which will set you up.
+            Once you complete these steps, you will have Arbitrum Sepolia ETH (gas token)
+            and PPDC (test token) in your wallet, and you are ready to continue with next steps.
           </span>
         </div>
 
@@ -90,7 +141,14 @@ export default function TestWalletPage() {
                 <h2>{step.title}</h2>
                 <p>{step.body}</p>
                 <p className="wallet-step__why">{step.why}</p>
-                {step.links.length > 0 ? (
+                {step.more && (
+                  <>
+                    <p/>
+                    {step.more}
+                    <p/>
+                  </>
+                )}
+                {step.links && (
                   <div className="wallet-step__links">
                     {step.links.map(([label, href]) => (
                       <a
@@ -103,7 +161,7 @@ export default function TestWalletPage() {
                       </a>
                     ))}
                   </div>
-                ) : null}
+                )}
               </div>
             </li>
           ))}
@@ -112,20 +170,16 @@ export default function TestWalletPage() {
         <section className="wallet-contact">
           <p className="section-label">Devnet</p>
           <h2>Join testing</h2>
-          <p>
-            First fund your wallet with Test PPDC from faucet, and then join testing on Devnet.
-          </p>
-          <p>
-            Upon account creation you will be asked to send an email to get your account verified.
+          <p>Top-up test token using PPDC Faucet, and then create account on devnet.
           </p>
           <div className="contact-actions">
             <a
-              className="contact-button"
+              className="contact-button-blue"
               href={ppdcFaucetHref}
               rel="noreferrer"
               target="_blank"
             >
-              Fund Test PPDC
+              PPDC Faucet
             </a>
             →
             <a
@@ -134,12 +188,9 @@ export default function TestWalletPage() {
               rel="noreferrer"
               target="_blank"
             >
-              Join Testing On Devnet
+              Create Account
             </a>
           </div>
-          <p>
-            🚫 All participants must be 18+.
-          </p>
         </section>
         <DemoDisclaimerFooter />
       </section>

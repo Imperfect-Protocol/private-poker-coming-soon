@@ -1,3 +1,4 @@
+import Link from "next/link";
 import SiteNav from "./SiteNav";
 import DemoDisclaimerFooter from "./DemoDisclaimerFooter";
 
@@ -100,6 +101,9 @@ function WelcomeScreen() {
                 <span key={item}>{item}</span>
               ))}
             </div>
+            {/* <div >
+              <Link className="contact-button-blue" href="instructions-to-play">Join testing</Link>
+            </div> */}
           </div>
         </div>
       </div>
@@ -107,7 +111,7 @@ function WelcomeScreen() {
       <div className="content-band">
         <section className="intro">
           <p className="section-label">The idea</p>
-          <h2>Privacy as the table staks</h2>
+          <h2>Privacy as the table stakes</h2>
           <p>
             Private Poker takes the old mental-poker question seriously: can
             people play a fair hand over a communications channel without a

@@ -1644,6 +1644,33 @@ select {
   margin-top: 42px;
 }
 
+.contact-button-blue {
+  width: fit-content;
+  min-height: 52px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0 22px;
+  border: 1px solid rgba(168, 223, 255, 0.72);
+  border-radius: 8px;
+  background:
+    radial-gradient(circle at 30% 15%, rgba(255, 255, 255, 0.8), transparent 18%),
+    linear-gradient(135deg, #a3eeff, #158bfa 34%, #064cd9 78%);
+  color: #2a1005 !important;
+  box-shadow:
+    0 0 22px rgba(21, 204, 250, 0.3),
+    0 16px 34px rgba(0, 0, 0, 0.3);
+  font-family: ui-monospace, SFMono-Regular, Consolas, "Liberation Mono", monospace;
+  font-size: 0.82rem;
+  font-weight: 950;
+  letter-spacing: 0.04em;
+  text-decoration: none;
+}
+
+.contact-button-blue:hover {
+  filter: brightness(1.08);
+}
+
 .contact-button {
   width: fit-content;
   min-height: 52px;
@@ -1839,6 +1866,23 @@ select {
   color: #d6a0aa !important;
   font-size: 0.94rem;
 }
+
+.wallet-step__more {
+  min-height: 36px;
+  display: block;
+  align-items: center;
+  padding: 0 12px;
+  border: 1px solid rgba(255, 242, 194, 0.24);
+  border-radius: 8px;
+  background: rgba(7, 4, 5, 0.66);
+  color: #fff2c2;
+  font-family: ui-monospace, SFMono-Regular, Consolas, "Liberation Mono", monospace;
+  font-size: 0.75rem;
+  font-weight: 900;
+  text-decoration: none;
+  margin-top: 16px;
+}
+
 
 .wallet-step__links {
   display: flex;

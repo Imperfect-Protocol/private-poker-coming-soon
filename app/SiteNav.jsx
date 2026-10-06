@@ -6,6 +6,8 @@ import { summonPrivatePokerSplash } from "./AppSplashController";
 const navItems = [
   ["Our Vision", "/"],
   ["Who are we", "/who-are-we"],
+  // ["How to join", "/instructions-to-play"],
+  // ["Demo on YouTube", "https://youtu.be/rFYkpxDPz58"],
   ["Contact Us", "/contact"],
 ];
 
