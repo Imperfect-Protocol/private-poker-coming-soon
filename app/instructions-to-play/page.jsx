@@ -124,7 +124,7 @@ export default function TestWalletPage() {
           <h1>Instructions how to join Private Poker testing</h1>
           <span>
             <p><b>Private Poker</b> is currently a <b><u>technology demo running on
-            the test network</u>&nbsp;<i>(Arbitrum Sepolia)</i></b>.</p>
+              the test network</u>&nbsp;<i>(Arbitrum Sepolia)</i></b>.</p>
           </span>
           <span>
             Below are general instructions, which will set you up.
@@ -143,9 +143,9 @@ export default function TestWalletPage() {
                 <p className="wallet-step__why">{step.why}</p>
                 {step.more && (
                   <>
-                    <p/>
+                    <p />
                     {step.more}
-                    <p/>
+                    <p />
                   </>
                 )}
                 {step.links && (
@@ -170,7 +170,18 @@ export default function TestWalletPage() {
         <section className="wallet-contact">
           <p className="section-label">Devnet</p>
           <h2>Join testing</h2>
-          <p>Top-up test token using PPDC Faucet, and then create account on devnet.
+          <p className="red-notice">
+            <strong>THIS IS TEST NETWORK PRODUCT ONLY - NO REAL MONEY IS INVOLVED - 
+            VERIFICATION CRITERIA REQUIRE 18+ AND JURISDICTION CHECK -
+            PASSING AGE CONFIRMATION DIALOG DOES NOT GUARANTEE ACCESS TO THE SERVICE -
+            YOU USE THIS SOFTWARE AS A TEST USER AND YOU ACCEPT THAT
+            SMART CONTRACTS MAY BE REDEPLOYED AND STATE WILL BE LOST 
+            </strong>
+          </p>
+          <p>
+            First, you will need our test token PPDC from our Faucet.<br/>
+            Next you need to create UNVERIFIED account using your Web3 wallet.<br/>
+            After that you need to contact us to get your account verified.
           </p>
           <div className="contact-actions">
             <a
@@ -190,6 +201,13 @@ export default function TestWalletPage() {
             >
               Create Account
             </a>
+            →
+            <div className="hero-signals">
+              <span>
+                Send us an e-mail with your wallet address to: <br />
+                verify@contact.imperfectprotocol.ie
+              </span>
+            </div>
           </div>
         </section>
         <DemoDisclaimerFooter />

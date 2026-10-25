@@ -101,8 +101,8 @@ function WelcomeScreen() {
                 <span key={item}>{item}</span>
               ))}
             </div>
-            {/* <div >
-              <Link className="contact-button-blue" href="instructions-to-play">Join testing</Link>
+            {/* <div className="contact-actions contact-actions--right">
+              <Link className="contact-button" href="instructions-to-play">INSTRUCTIONS HOW TO JOIN</Link>
             </div> */}
           </div>
         </div>

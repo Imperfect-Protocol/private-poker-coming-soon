@@ -84,45 +84,54 @@ export default function AgeGateDialog({ isFading = false, onConfirmAdult, onReje
   }
 
   return (
-    <form
-      className={`age-gate ${isFading ? "age-gate--fade" : ""}`}
-      onSubmit={handleSubmit}
-    >
-      <label className="age-gate__label" htmlFor="age-gate-day">
-        Enter your date of birth:
-      </label>
-      <div className="age-gate__fields">
-        <input
-          ref={dayInputRef}
-          id="age-gate-day"
-          inputMode="numeric"
-          maxLength={2}
-          onChange={(event) => setDay(event.target.value.replace(/\D/g, ""))}
-          placeholder="dd"
-          value={day}
-        />
-        <input
-          aria-label="Month"
-          inputMode="numeric"
-          maxLength={2}
-          onChange={(event) => setMonth(event.target.value.replace(/\D/g, ""))}
-          placeholder="mm"
-          value={month}
-        />
-        <input
-          aria-label="Year"
-          inputMode="numeric"
-          maxLength={4}
-          onChange={(event) => setYear(event.target.value.replace(/\D/g, ""))}
-          placeholder="yyyy"
-          value={year}
-        />
+    <>
+      <form
+        className={`age-gate ${isFading ? "age-gate--fade" : ""}`}
+        onSubmit={handleSubmit}
+      >
+        <label className="age-gate__label" htmlFor="age-gate-day">
+          Enter your date of birth:
+        </label>
+        <div className="age-gate__fields">
+          <input
+            ref={dayInputRef}
+            id="age-gate-day"
+            inputMode="numeric"
+            maxLength={2}
+            onChange={(event) => setDay(event.target.value.replace(/\D/g, ""))}
+            placeholder="dd"
+            value={day}
+          />
+          <input
+            aria-label="Month"
+            inputMode="numeric"
+            maxLength={2}
+            onChange={(event) => setMonth(event.target.value.replace(/\D/g, ""))}
+            placeholder="mm"
+            value={month}
+          />
+          <input
+            aria-label="Year"
+            inputMode="numeric"
+            maxLength={4}
+            onChange={(event) => setYear(event.target.value.replace(/\D/g, ""))}
+            placeholder="yyyy"
+            value={year}
+          />
+        </div>
+        {error ? <p className="age-gate__error">{error}</p> : null}
+        <button type="submit">OK</button>
+        <p className="age-gate__note">
+          This data won't be collected or stored in our systems.
+        </p>
+      </form>
+      <div>
+        <br />
+        <br />
+        <br />
+        <br />
+        <br />
       </div>
-      {error ? <p className="age-gate__error">{error}</p> : null}
-      <button type="submit">OK</button>
-      <p className="age-gate__note">
-        This data won't be collected or stored in our systems.
-      </p>
-    </form>
+    </>
   );
 }

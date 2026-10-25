@@ -18,10 +18,7 @@ export default function ContactPage() {
           <p className="section-label">Contact</p>
           <h2>Contact Our Team</h2>
           <p>
-            Send us email to:{" "}
-            <a href="mailto:imperfect-protocol@protonmail.com?subject=Private%20Poker%20Membership">
-              <strong>imperfect-protocol@protonmail.com</strong>
-            </a>
+            Send us email to:{" "}<code>info@contact.imperfectprotocol.ie</code>
           </p>
           <p>
             or visit our GitHub repository:{" "}
@@ -36,7 +33,7 @@ export default function ContactPage() {
           <div className="contact-actions contact-actions--lower">
             <a
               className="contact-button"
-              href="mailto:imperfect-protocol@protonmail.com?subject=Private%20Poker%20Membership"
+              href="mailto:info@contact.imperfectprotocol.ie?subject=Private%20Poker%20Membership"
             >
               Contact Us
             </a>
